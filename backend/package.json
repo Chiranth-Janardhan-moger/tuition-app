@@ -1,11 +1,12 @@
 {
-  "name": "tuition-backend",
+  "name": "edumanage-backend",
   "version": "1.0.0",
-  "description": "Tuition Management Backend",
+  "description": "EduManage Backend API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "build": "echo 'No build step required for Node.js backend'",
     "create-admin": "node scripts/createAdmin.js",
     "create-parent": "node scripts/createParent.js",
     "add-student": "node scripts/addStudent.js",
