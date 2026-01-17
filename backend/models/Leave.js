@@ -25,4 +25,9 @@ const leaveSchema = new mongoose.Schema({
   }
 });
 
+// Add indexes for better query performance
+leaveSchema.index({ studentId: 1, createdAt: -1 });
+leaveSchema.index({ parentId: 1, createdAt: -1 });
+leaveSchema.index({ createdAt: -1 });
+
 module.exports = mongoose.model('Leave', leaveSchema);

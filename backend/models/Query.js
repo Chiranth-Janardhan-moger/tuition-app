@@ -41,4 +41,9 @@ const querySchema = new mongoose.Schema({
   }
 });
 
+// Add indexes for better query performance
+querySchema.index({ parentId: 1, createdAt: -1 });
+querySchema.index({ status: 1, hasUnreadAdmin: 1 });
+querySchema.index({ createdAt: -1 });
+
 module.exports = mongoose.model('Query', querySchema);

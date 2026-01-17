@@ -22,8 +22,22 @@ router.get('/', protect, adminOnly, async (req, res) => {
       .populate('studentId', 'name class')
       .populate('parentId', 'name phoneNumber')
       .sort({ createdAt: -1 });
-    res.json(leaves);
+    
+    console.log(`Found ${leaves.length} leave requests`);
+    
+    // Filter out leaves with deleted students or parents
+    const validLeaves = leaves.filter(leave => {
+      const isValid = leave.studentId && leave.parentId;
+      if (!isValid) {
+        console.log(`Filtering out invalid leave: ${leave._id}`);
+      }
+      return isValid;
+    });
+    
+    console.log(`Returning ${validLeaves.length} valid leave requests`);
+    res.json(validLeaves);
   } catch (error) {
+    console.error('Error fetching leaves:', error);
     res.status(500).json({ message: error.message });
   }
 });

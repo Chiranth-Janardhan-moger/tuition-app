@@ -41,6 +41,31 @@ router.get('/all', protect, adminOnly, async (req, res) => {
   }
 });
 
+// Get overdue payments count (Admin)
+router.get('/overdue-count', protect, adminOnly, async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const feeRecords = await Fee.find({
+      nextDueDate: { $lt: today }
+    }).populate('studentId', 'name class');
+    
+    res.json({ 
+      count: feeRecords.length,
+      students: feeRecords.map(f => ({
+        id: f.studentId._id,
+        name: f.studentId.name,
+        class: f.studentId.class,
+        dueDate: f.nextDueDate,
+        monthlyAmount: f.monthlyAmount
+      }))
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Create or update fee record (Admin)
 router.post('/setup', protect, adminOnly, async (req, res) => {
   try {
@@ -86,8 +111,12 @@ router.post('/:id/payment', protect, adminOnly, async (req, res) => {
       addedBy: req.user._id
     });
     
-    // Auto-calculate next due date (30 days from paid date)
-    const lastPaidDate = new Date(paidDate);
+    // Sort payments by date to get the latest
+    feeRecord.payments.sort((a, b) => new Date(b.paidDate).getTime() - new Date(a.paidDate).getTime());
+    
+    // Auto-calculate next due date (30 days from LAST payment date)
+    const lastPayment = feeRecord.payments[0]; // Most recent payment
+    const lastPaidDate = new Date(lastPayment.paidDate);
     const nextDue = new Date(lastPaidDate);
     nextDue.setDate(nextDue.getDate() + 30);
     feeRecord.nextDueDate = nextDue;
