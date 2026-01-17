@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+   "build": "tsc",
     "create-admin": "node scripts/createAdmin.js",
     "create-parent": "node scripts/createParent.js",
     "add-student": "node scripts/addStudent.js",
@@ -28,3 +29,4 @@
     "nodemon": "^3.1.11"
   }
 }
+
