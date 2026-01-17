@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  email: {
+  phoneNumber: {
     type: String,
     required: true,
     unique: true
@@ -20,7 +20,6 @@ const userSchema = new mongoose.Schema({
     enum: ['admin', 'parent'],
     default: 'parent'
   },
-  phone: String,
   createdAt: {
     type: Date,
     default: Date.now

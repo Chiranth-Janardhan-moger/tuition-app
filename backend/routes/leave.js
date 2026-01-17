@@ -6,7 +6,9 @@ const { protect, adminOnly } = require('../middleware/auth');
 // Get leave requests by student
 router.get('/student/:studentId', protect, async (req, res) => {
   try {
-    const leaves = await Leave.find({ studentId: req.params.studentId }).sort({ createdAt: -1 });
+    const leaves = await Leave.find({ studentId: req.params.studentId })
+      .populate('studentId', 'name class')
+      .sort({ createdAt: -1 });
     res.json(leaves);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -18,7 +20,7 @@ router.get('/', protect, adminOnly, async (req, res) => {
   try {
     const leaves = await Leave.find()
       .populate('studentId', 'name class')
-      .populate('parentId', 'name')
+      .populate('parentId', 'name phoneNumber')
       .sort({ createdAt: -1 });
     res.json(leaves);
   } catch (error) {
@@ -39,11 +41,11 @@ router.post('/', protect, async (req, res) => {
   }
 });
 
-// Update leave status (Admin)
-router.put('/:id', protect, adminOnly, async (req, res) => {
+// Delete leave (Admin)
+router.delete('/:id', protect, adminOnly, async (req, res) => {
   try {
-    const leave = await Leave.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.json(leave);
+    await Leave.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Leave deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

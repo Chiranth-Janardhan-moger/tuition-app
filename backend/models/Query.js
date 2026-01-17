@@ -8,7 +8,8 @@ const querySchema = new mongoose.Schema({
   },
   studentId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Student'
+    ref: 'Student',
+    required: true
   },
   messages: [{
     senderId: {
@@ -25,6 +26,14 @@ const querySchema = new mongoose.Schema({
     type: String,
     enum: ['open', 'closed'],
     default: 'open'
+  },
+  hasUnreadParent: {
+    type: Boolean,
+    default: false
+  },
+  hasUnreadAdmin: {
+    type: Boolean,
+    default: true
   },
   createdAt: {
     type: Date,

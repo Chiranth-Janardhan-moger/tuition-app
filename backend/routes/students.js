@@ -7,7 +7,7 @@ const { protect, adminOnly } = require('../middleware/auth');
 // Get all students (Admin)
 router.get('/', protect, adminOnly, async (req, res) => {
   try {
-    const students = await Student.find().populate('parentId', 'name email phone');
+    const students = await Student.find().populate('parentId', 'name phoneNumber');
     res.json(students);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -27,13 +27,13 @@ router.get('/my-students', protect, async (req, res) => {
 // Add student (Admin)
 router.post('/', protect, adminOnly, async (req, res) => {
   try {
-    const { name, schoolName, class: studentClass, parentEmail, rollNumber, dateOfBirth } = req.body;
+    const { name, schoolName, class: studentClass, parentPhoneNumber, rollNumber, dateOfBirth } = req.body;
 
-    let parent = await User.findOne({ email: parentEmail });
+    let parent = await User.findOne({ phoneNumber: parentPhoneNumber });
     if (!parent) {
       parent = await User.create({
         name: req.body.parentName || 'Parent',
-        email: parentEmail,
+        phoneNumber: parentPhoneNumber,
         password: 'parent123',
         role: 'parent'
       });
@@ -80,7 +80,7 @@ router.put('/:id/link', protect, adminOnly, async (req, res) => {
       req.params.id,
       { parentId },
       { new: true }
-    ).populate('parentId', 'name email');
+    ).populate('parentId', 'name phoneNumber');
     
     res.json(student);
   } catch (error) {

@@ -25,11 +25,38 @@ router.get('/student/:studentId', protect, async (req, res) => {
 // Mark attendance (Admin)
 router.post('/', protect, adminOnly, async (req, res) => {
   try {
+    const { studentId, date, status } = req.body;
+    
+    // Check if attendance already exists for this student on this date
+    const existingAttendance = await Attendance.findOne({ studentId, date });
+    
+    if (existingAttendance) {
+      // Update existing attendance
+      existingAttendance.status = status;
+      existingAttendance.markedBy = req.user._id;
+      await existingAttendance.save();
+      return res.json(existingAttendance);
+    }
+    
+    // Create new attendance
     const attendance = await Attendance.create({
-      ...req.body,
+      studentId,
+      date,
+      status,
       markedBy: req.user._id
     });
     res.status(201).json(attendance);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get attendance for a specific date (Admin)
+router.get('/date/:date', protect, adminOnly, async (req, res) => {
+  try {
+    const { date } = req.params;
+    const attendance = await Attendance.find({ date }).populate('studentId', 'name class');
+    res.json(attendance);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

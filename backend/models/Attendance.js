@@ -12,7 +12,7 @@ const attendanceSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['present', 'absent', 'leave'],
+    enum: ['present', 'absent'],
     required: true
   },
   remarks: String,
@@ -25,5 +25,8 @@ const attendanceSchema = new mongoose.Schema({
     default: Date.now
   }
 });
+
+// Ensure one attendance record per student per day
+attendanceSchema.index({ studentId: 1, date: 1 }, { unique: true });
 
 module.exports = mongoose.model('Attendance', attendanceSchema);

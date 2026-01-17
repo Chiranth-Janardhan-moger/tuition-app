@@ -7,7 +7,7 @@ const { protect, adminOnly } = require('../middleware/auth');
 router.get('/my-queries', protect, async (req, res) => {
   try {
     const queries = await Query.find({ parentId: req.user._id })
-      .populate('studentId', 'name')
+      .populate('studentId', 'name class')
       .populate('messages.senderId', 'name role')
       .sort({ createdAt: -1 });
     res.json(queries);
@@ -20,8 +20,8 @@ router.get('/my-queries', protect, async (req, res) => {
 router.get('/', protect, adminOnly, async (req, res) => {
   try {
     const queries = await Query.find()
-      .populate('parentId', 'name')
-      .populate('studentId', 'name')
+      .populate('parentId', 'name phoneNumber')
+      .populate('studentId', 'name class')
       .populate('messages.senderId', 'name role')
       .sort({ createdAt: -1 });
     res.json(queries);
@@ -39,7 +39,9 @@ router.post('/', protect, async (req, res) => {
       messages: [{
         senderId: req.user._id,
         message: req.body.message
-      }]
+      }],
+      hasUnreadAdmin: true,
+      hasUnreadParent: false
     });
     res.status(201).json(query);
   } catch (error) {
@@ -55,11 +57,68 @@ router.post('/:id/message', protect, async (req, res) => {
       senderId: req.user._id,
       message: req.body.message
     });
+    
+    // Mark as unread for the other party
+    if (req.user.role === 'admin') {
+      query.hasUnreadParent = true;
+      query.hasUnreadAdmin = false;
+    } else {
+      query.hasUnreadAdmin = true;
+      query.hasUnreadParent = false;
+    }
+    
     await query.save();
     
     const updatedQuery = await Query.findById(req.params.id)
+      .populate('studentId', 'name class')
       .populate('messages.senderId', 'name role');
     res.json(updatedQuery);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Mark query as read
+router.put('/:id/mark-read', protect, async (req, res) => {
+  try {
+    const query = await Query.findById(req.params.id);
+    
+    if (req.user.role === 'admin') {
+      query.hasUnreadAdmin = false;
+    } else {
+      query.hasUnreadParent = false;
+    }
+    
+    await query.save();
+    res.json(query);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Close query (Admin)
+router.put('/:id/close', protect, adminOnly, async (req, res) => {
+  try {
+    const query = await Query.findByIdAndUpdate(
+      req.params.id,
+      { status: 'closed' },
+      { new: true }
+    );
+    res.json(query);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Reopen query (Admin)
+router.put('/:id/reopen', protect, adminOnly, async (req, res) => {
+  try {
+    const query = await Query.findByIdAndUpdate(
+      req.params.id,
+      { status: 'open' },
+      { new: true }
+    );
+    res.json(query);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

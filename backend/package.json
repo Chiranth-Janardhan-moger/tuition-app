@@ -1,12 +1,11 @@
 {
-  "name": "edumanage-backend",
+  "name": "tuition-backend",
   "version": "1.0.0",
-  "description": "EduManage Backend API",
+  "description": "Tuition Management Backend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "build": "echo 'No build step required for Node.js backend'",
     "create-admin": "node scripts/createAdmin.js",
     "create-parent": "node scripts/createParent.js",
     "add-student": "node scripts/addStudent.js",
@@ -23,7 +22,6 @@
     "mongoose": "^7.0.0",
     "multer": "^1.4.5-lts.1",
     "semver": "^7.7.3",
-    "simple-update-notifier": "^2.0.0",
     "socket.io": "^4.6.1"
   },
   "devDependencies": {

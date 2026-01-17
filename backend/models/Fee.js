@@ -6,30 +6,33 @@ const feeSchema = new mongoose.Schema({
     ref: 'Student',
     required: true
   },
-  amount: {
+  monthlyAmount: {
     type: Number,
     required: true
   },
-  month: {
-    type: String,
-    required: true
-  },
-  year: {
-    type: Number,
-    required: true
-  },
-  status: {
-    type: String,
-    enum: ['paid', 'unpaid'],
-    default: 'unpaid'
-  },
-  dueDate: {
+  payments: [{
+    amount: {
+      type: Number,
+      required: true
+    },
+    paidDate: {
+      type: Date,
+      required: true
+    },
+    remarks: String,
+    addedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  nextDueDate: {
     type: Date,
     required: true
   },
-  paidDate: Date,
-  paymentMethod: String,
-  transactionId: String,
   createdAt: {
     type: Date,
     default: Date.now

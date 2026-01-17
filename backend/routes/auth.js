@@ -12,9 +12,9 @@ const generateToken = (id) => {
 // Login
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { phoneNumber, password } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ phoneNumber });
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
@@ -34,7 +34,7 @@ router.post('/login', async (req, res) => {
       user: {
         id: user._id,
         name: user.name,
-        email: user.email,
+        phoneNumber: user.phoneNumber,
         role: user.role
       },
       students
@@ -47,18 +47,17 @@ router.post('/login', async (req, res) => {
 // Register Parent
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password, phone } = req.body;
+    const { name, phoneNumber, password } = req.body;
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ phoneNumber });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
     const user = await User.create({
       name,
-      email,
+      phoneNumber,
       password,
-      phone,
       role: 'parent'
     });
 
@@ -67,7 +66,7 @@ router.post('/register', async (req, res) => {
       user: {
         id: user._id,
         name: user.name,
-        email: user.email,
+        phoneNumber: user.phoneNumber,
         role: user.role
       }
     });

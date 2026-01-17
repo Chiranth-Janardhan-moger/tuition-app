@@ -16,16 +16,15 @@ router.get('/parents', protect, adminOnly, async (req, res) => {
 // Create parent (Admin)
 router.post('/create-parent', protect, adminOnly, async (req, res) => {
   try {
-    const { name, email, phoneNumber, password } = req.body;
+    const { name, phoneNumber, password } = req.body;
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ phoneNumber });
     if (existingUser) {
-      return res.status(400).json({ message: 'User with this email already exists' });
+      return res.status(400).json({ message: 'User with this phone number already exists' });
     }
 
     const parent = await User.create({
       name,
-      email,
       phoneNumber,
       password,
       role: 'parent'
@@ -34,7 +33,6 @@ router.post('/create-parent', protect, adminOnly, async (req, res) => {
     res.status(201).json({
       id: parent._id,
       name: parent.name,
-      email: parent.email,
       phoneNumber: parent.phoneNumber,
       role: parent.role
     });
