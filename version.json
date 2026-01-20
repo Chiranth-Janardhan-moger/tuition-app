@@ -1,6 +1,7 @@
 {
   "version": "1.0.0",
-  "apkUrl": "https://github.com/YOUR_USERNAME/YOUR_REPO/releases/download/v1.0.0/EduManage_v1.0.0.apk",
+  "apkUrl": "https://github.com/Chiranth-Janardhan-moger/tuition-app/releases/tag/v1.0.0/app-arm64-v8a-release.apk",
   "changelog": "Initial release\n- Parent and Admin dashboards\n- Attendance management\n- Fee tracking\n- Leave requests\n- Private messaging\n- Announcements",
   "forceUpdate": false
 }
+
