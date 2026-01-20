@@ -3,7 +3,7 @@ const router = express.Router();
 const Attendance = require('../models/Attendance');
 const { protect, adminOnly } = require('../middleware/auth');
 
-// Get attendance by student
+// Get attendance by student - Optimized with lean()
 router.get('/student/:studentId', protect, async (req, res) => {
   try {
     const { month, year } = req.query;
@@ -15,47 +15,52 @@ router.get('/student/:studentId', protect, async (req, res) => {
       query.date = { $gte: startDate, $lte: endDate };
     }
 
-    const attendance = await Attendance.find(query).sort({ date: -1 });
+    const attendance = await Attendance.find(query)
+      .sort({ date: -1 })
+      .lean() // Use lean() for faster queries
+      .select('date status'); // Only select needed fields
+    
     res.json(attendance);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Mark attendance (Admin)
+// Mark attendance (Admin) - Optimized with upsert
 router.post('/', protect, adminOnly, async (req, res) => {
   try {
     const { studentId, date, status } = req.body;
     
-    // Check if attendance already exists for this student on this date
-    const existingAttendance = await Attendance.findOne({ studentId, date });
+    // Use findOneAndUpdate with upsert for atomic operation
+    const attendance = await Attendance.findOneAndUpdate(
+      { studentId, date },
+      { 
+        status, 
+        markedBy: req.user._id,
+        studentId,
+        date
+      },
+      { 
+        new: true, 
+        upsert: true,
+        setDefaultsOnInsert: true
+      }
+    );
     
-    if (existingAttendance) {
-      // Update existing attendance
-      existingAttendance.status = status;
-      existingAttendance.markedBy = req.user._id;
-      await existingAttendance.save();
-      return res.json(existingAttendance);
-    }
-    
-    // Create new attendance
-    const attendance = await Attendance.create({
-      studentId,
-      date,
-      status,
-      markedBy: req.user._id
-    });
-    res.status(201).json(attendance);
+    res.json(attendance);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Get attendance for a specific date (Admin)
+// Get attendance for a specific date (Admin) - Optimized
 router.get('/date/:date', protect, adminOnly, async (req, res) => {
   try {
     const { date } = req.params;
-    const attendance = await Attendance.find({ date }).populate('studentId', 'name class');
+    const attendance = await Attendance.find({ date })
+      .populate('studentId', 'name class')
+      .lean()
+      .select('studentId status');
     res.json(attendance);
   } catch (error) {
     res.status(500).json({ message: error.message });

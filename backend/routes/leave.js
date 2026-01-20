@@ -3,6 +3,16 @@ const router = express.Router();
 const Leave = require('../models/Leave');
 const { protect, adminOnly } = require('../middleware/auth');
 
+// Get pending leave count (Admin) - Optimized for dashboard
+router.get('/pending-count', protect, adminOnly, async (req, res) => {
+  try {
+    const count = await Leave.countDocuments();
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Get leave requests by student
 router.get('/student/:studentId', protect, async (req, res) => {
   try {
