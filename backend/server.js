@@ -18,15 +18,30 @@ const io = socketIo(server, {
 
 // Middleware
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' })); // Limit payload size
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// MongoDB Connection
+// Compression middleware for responses
+const compression = require('compression');
+app.use(compression());
+
+// MongoDB Connection with optimizations
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/tuition-app', {
   useNewUrlParser: true,
-  useUnifiedTopology: true
+  useUnifiedTopology: true,
+  maxPoolSize: 10, // Connection pool size
+  minPoolSize: 2,
+  socketTimeoutMS: 45000,
+  serverSelectionTimeoutMS: 5000,
+  family: 4 // Use IPv4
 })
-.then(() => console.log('MongoDB Connected'))
+.then(() => {
+  console.log('MongoDB Connected');
+  // Enable query logging in development
+  if (process.env.NODE_ENV === 'development') {
+    mongoose.set('debug', true);
+  }
+})
 .catch(err => console.log('MongoDB Error:', err));
 
 // Socket.io for real-time chat
@@ -51,7 +66,7 @@ app.get('/', (req, res) => {
   res.json({
     status: 'success',
     message: '🎓 EduManage API Server is running!',
-    version: '1.0.0',
+    version: '1.0.11',
     timestamp: new Date().toISOString(),
     endpoints: {
       auth: '/api/auth',
