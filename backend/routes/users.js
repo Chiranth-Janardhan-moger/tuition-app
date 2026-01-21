@@ -3,10 +3,13 @@ const router = express.Router();
 const User = require('../models/User');
 const { protect, adminOnly } = require('../middleware/auth');
 
-// Get all parents (Admin)
+// Get all parents (Admin) - Optimized
 router.get('/parents', protect, adminOnly, async (req, res) => {
   try {
-    const parents = await User.find({ role: 'parent' }).select('-password');
+    const parents = await User.find({ role: 'parent' })
+      .select('-password')
+      .lean()
+      .sort({ name: 1 });
     res.json(parents);
   } catch (error) {
     res.status(500).json({ message: error.message });

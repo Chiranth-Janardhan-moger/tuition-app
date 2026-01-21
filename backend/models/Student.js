@@ -26,4 +26,9 @@ const studentSchema = new mongoose.Schema({
   }
 });
 
+// Add indexes for faster queries
+studentSchema.index({ parentId: 1 }); // For parent's student lookup
+studentSchema.index({ name: 1 }); // For sorting by name
+studentSchema.index({ class: 1 }); // For filtering by class
+
 module.exports = mongoose.model('Student', studentSchema);

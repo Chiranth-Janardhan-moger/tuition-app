@@ -36,4 +36,9 @@ userSchema.methods.comparePassword = async function(password) {
   return await bcrypt.compare(password, this.password);
 };
 
+// Add indexes for faster queries
+userSchema.index({ role: 1 }); // For filtering by role
+userSchema.index({ name: 1 }); // For sorting by name
+userSchema.index({ phoneNumber: 1 }, { unique: true }); // Already unique, ensure index
+
 module.exports = mongoose.model('User', userSchema);
