@@ -1,9 +1,6 @@
 {
   "version": "1.0.9",
-  "apkUrl": "https://github.com/Chiranth-Janardhan-moger/tuition-app/releases/tag/v1.0.8/app-arm64-v8a-release.apk",
-  "changelog": "Initial release\n- Parent and Admin dashboards\n- Attendance management\n- Fee tracking\n- Leave requests\n- Private messaging\n- Announcements",
+  "apkUrl": "https://github.com/Chiranth-Janardhan-moger/tuition-app/releases/download/v1.0.9/app-arm64-v8a-release.apk",
+  "changelog": "Performance improvements\n- Faster loading times\n- Optimized database queries\n- Real-time attendance updates\n- Improved UI responsiveness\n- Fixed slow loading issues",
   "forceUpdate": false
 }
-
-
-
