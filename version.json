@@ -1,8 +1,9 @@
 {
-  "version": "1.0.8",
+  "version": "1.0.9",
   "apkUrl": "https://github.com/Chiranth-Janardhan-moger/tuition-app/releases/tag/v1.0.8/app-arm64-v8a-release.apk",
   "changelog": "Initial release\n- Parent and Admin dashboards\n- Attendance management\n- Fee tracking\n- Leave requests\n- Private messaging\n- Announcements",
   "forceUpdate": false
 }
+
 
 
