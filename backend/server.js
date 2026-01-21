@@ -4,6 +4,9 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const http = require('http');
 const socketIo = require('socket.io');
+const compression = require("compression");
+app.use(compression());
+
 
 dotenv.config();
 
@@ -21,9 +24,14 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' })); // Limit payload size
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Compression middleware for responses
-const compression = require('compression');
-app.use(compression());
+// Compression middleware for responses (optional)
+try {
+  const compression = require('compression');
+  app.use(compression());
+  console.log('Compression enabled');
+} catch (err) {
+  console.log('Compression not available, continuing without it');
+}
 
 // MongoDB Connection with optimizations
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/tuition-app', {
