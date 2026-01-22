@@ -6,37 +6,44 @@ const feeSchema = new mongoose.Schema({
     ref: 'Student',
     required: true
   },
-  monthlyAmount: {
+  feeName: {
+    type: String,
+    required: true // e.g., "August Fee"
+  },
+  feeAmount: {
     type: Number,
     required: true
   },
-  payments: [{
-    amount: {
-      type: Number,
-      required: true
-    },
-    paidDate: {
-      type: Date,
-      required: true
-    },
-    remarks: String,
-    addedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
-  nextDueDate: {
+  periodStart: {
     type: Date,
-    required: true
+    required: true // e.g., 8 Aug
   },
+  periodEnd: {
+    type: Date,
+    required: true // e.g., 7 Sep
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'paid', 'overdue'],
+    default: 'pending'
+  },
+  paidDate: {
+    type: Date
+  },
+  paidBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  remarks: String,
   createdAt: {
     type: Date,
     default: Date.now
   }
 });
+
+// Indexes for faster queries
+feeSchema.index({ studentId: 1, periodStart: 1 });
+feeSchema.index({ status: 1 });
+feeSchema.index({ periodEnd: 1 });
 
 module.exports = mongoose.model('Fee', feeSchema);

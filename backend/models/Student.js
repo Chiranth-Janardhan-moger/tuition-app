@@ -20,6 +20,14 @@ const studentSchema = new mongoose.Schema({
   },
   rollNumber: String,
   dateOfBirth: Date,
+  joiningDate: {
+    type: Date,
+    default: Date.now
+  },
+  monthlyFee: {
+    type: Number,
+    default: 0
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -27,8 +35,9 @@ const studentSchema = new mongoose.Schema({
 });
 
 // Add indexes for faster queries
-studentSchema.index({ parentId: 1 }); // For parent's student lookup
-studentSchema.index({ name: 1 }); // For sorting by name
-studentSchema.index({ class: 1 }); // For filtering by class
+studentSchema.index({ parentId: 1 });
+studentSchema.index({ name: 1 });
+studentSchema.index({ class: 1 });
+studentSchema.index({ joiningDate: 1 });
 
 module.exports = mongoose.model('Student', studentSchema);

@@ -4,36 +4,160 @@ const Fee = require('../models/Fee');
 const Student = require('../models/Student');
 const { protect, adminOnly } = require('../middleware/auth');
 
-// Get fee record by student
+// Helper function to generate fee cycles
+const generateFeeCycles = (joiningDate, monthlyFee, monthsAhead = 12) => {
+  const cycles = [];
+  const today = new Date();
+  const joiningDay = joiningDate.getDate();
+  
+  let currentStart = new Date(joiningDate);
+  
+  // Generate cycles from joining date until monthsAhead from now
+  for (let i = 0; i < 100; i++) { // Max 100 cycles to prevent infinite loop
+    const periodStart = new Date(currentStart);
+    
+    // Calculate period end (one day before same date next month)
+    const periodEnd = new Date(periodStart);
+    periodEnd.setMonth(periodEnd.getMonth() + 1);
+    periodEnd.setDate(periodEnd.getDate() - 1);
+    
+    // Stop if we've gone too far into the future
+    const futureLimit = new Date(today);
+    futureLimit.setMonth(futureLimit.getMonth() + monthsAhead);
+    if (periodStart > futureLimit) break;
+    
+    // Get month name for fee name
+    const monthName = periodStart.toLocaleString('en-US', { month: 'long' });
+    const year = periodStart.getFullYear();
+    const feeName = `${monthName} ${year} Fee`;
+    
+    cycles.push({
+      feeName,
+      feeAmount: monthlyFee,
+      periodStart,
+      periodEnd
+    });
+    
+    // Move to next cycle
+    currentStart = new Date(periodEnd);
+    currentStart.setDate(currentStart.getDate() + 1);
+  }
+  
+  return cycles;
+};
+
+// Helper function to check and create missing fee cycles
+const ensureFeeCycles = async (studentId) => {
+  const student = await Student.findById(studentId);
+  if (!student || !student.joiningDate || !student.monthlyFee) {
+    return;
+  }
+  
+  const cycles = generateFeeCycles(student.joiningDate, student.monthlyFee, 2);
+  
+  for (const cycle of cycles) {
+    // Check if this cycle already exists
+    const existing = await Fee.findOne({
+      studentId,
+      periodStart: cycle.periodStart
+    });
+    
+    if (!existing) {
+      // Determine status
+      const today = new Date();
+      let status = 'pending';
+      if (today > cycle.periodEnd) {
+        status = 'overdue';
+      }
+      
+      await Fee.create({
+        studentId,
+        ...cycle,
+        status
+      });
+    } else {
+      // Update status if needed
+      const today = new Date();
+      if (existing.status === 'pending' && today > existing.periodEnd) {
+        existing.status = 'overdue';
+        await existing.save();
+      }
+    }
+  }
+};
+
+// Get fee records for a student (Parent)
 router.get('/student/:studentId', protect, async (req, res) => {
   try {
-    let feeRecord = await Fee.findOne({ studentId: req.params.studentId })
-      .populate('studentId', 'name class')
-      .populate('payments.addedBy', 'name');
-    
-    if (!feeRecord) {
-      return res.json(null);
+    const student = await Student.findById(req.params.studentId);
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
     }
     
-    res.json(feeRecord);
+    // Ensure fee cycles are created
+    await ensureFeeCycles(req.params.studentId);
+    
+    // Get all fee records
+    const fees = await Fee.find({ studentId: req.params.studentId })
+      .sort({ periodStart: 1 })
+      .lean();
+    
+    res.json({
+      student: {
+        name: student.name,
+        joiningDate: student.joiningDate,
+        monthlyFee: student.monthlyFee
+      },
+      fees
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Get all students with fee info (Admin)
-router.get('/all', protect, adminOnly, async (req, res) => {
+// Get all students with fee summary (Admin)
+router.get('/all-students', protect, adminOnly, async (req, res) => {
   try {
-    const students = await Student.find().select('name class');
-    const feeRecords = await Fee.find().populate('studentId', 'name class');
+    const students = await Student.find()
+      .populate('parentId', 'name phoneNumber')
+      .lean();
     
-    const studentsWithFees = students.map(student => {
-      const feeRecord = feeRecords.find(f => f.studentId._id.toString() === student._id.toString());
-      return {
-        student,
-        feeRecord: feeRecord || null
-      };
-    });
+    const studentsWithFees = await Promise.all(
+      students.map(async (student) => {
+        if (!student.joiningDate || !student.monthlyFee) {
+          return {
+            ...student,
+            pendingFees: 0,
+            overdueFees: 0,
+            nextDue: null
+          };
+        }
+        
+        await ensureFeeCycles(student._id);
+        
+        const pendingCount = await Fee.countDocuments({
+          studentId: student._id,
+          status: 'pending'
+        });
+        
+        const overdueCount = await Fee.countDocuments({
+          studentId: student._id,
+          status: 'overdue'
+        });
+        
+        const nextUnpaid = await Fee.findOne({
+          studentId: student._id,
+          status: { $in: ['pending', 'overdue'] }
+        }).sort({ periodStart: 1 });
+        
+        return {
+          ...student,
+          pendingFees: pendingCount,
+          overdueFees: overdueCount,
+          nextDue: nextUnpaid ? nextUnpaid.periodEnd : null
+        };
+      })
+    );
     
     res.json(studentsWithFees);
   } catch (error) {
@@ -41,131 +165,69 @@ router.get('/all', protect, adminOnly, async (req, res) => {
   }
 });
 
-// Get overdue payments count (Admin)
-router.get('/overdue-count', protect, adminOnly, async (req, res) => {
+// Mark fee as paid (Admin) - Automatically assigns to earliest unpaid
+router.post('/mark-paid/:studentId', protect, adminOnly, async (req, res) => {
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const { remarks } = req.body;
     
-    const feeRecords = await Fee.find({
-      nextDueDate: { $lt: today }
-    }).populate('studentId', 'name class');
+    // Ensure cycles exist
+    await ensureFeeCycles(req.params.studentId);
     
-    res.json({ 
-      count: feeRecords.length,
-      students: feeRecords.map(f => ({
-        id: f.studentId._id,
-        name: f.studentId.name,
-        class: f.studentId.class,
-        dueDate: f.nextDueDate,
-        monthlyAmount: f.monthlyAmount
-      }))
+    // Find earliest unpaid fee
+    const unpaidFee = await Fee.findOne({
+      studentId: req.params.studentId,
+      status: { $in: ['pending', 'overdue'] }
+    }).sort({ periodStart: 1 });
+    
+    if (!unpaidFee) {
+      return res.status(404).json({ message: 'No unpaid fees found' });
+    }
+    
+    // Mark as paid
+    unpaidFee.status = 'paid';
+    unpaidFee.paidDate = new Date();
+    unpaidFee.paidBy = req.user._id;
+    unpaidFee.remarks = remarks;
+    await unpaidFee.save();
+    
+    res.json({
+      message: 'Fee marked as paid',
+      fee: unpaidFee
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Create or update fee record (Admin)
-router.post('/setup', protect, adminOnly, async (req, res) => {
+// Update student fee details (Admin)
+router.put('/student/:studentId/settings', protect, adminOnly, async (req, res) => {
   try {
-    const { studentId, monthlyAmount, nextDueDate } = req.body;
+    const { joiningDate, monthlyFee } = req.body;
     
-    let feeRecord = await Fee.findOne({ studentId });
-    
-    if (feeRecord) {
-      feeRecord.monthlyAmount = monthlyAmount;
-      feeRecord.nextDueDate = nextDueDate;
-      await feeRecord.save();
-    } else {
-      feeRecord = await Fee.create({
-        studentId,
-        monthlyAmount,
-        nextDueDate,
-        payments: []
-      });
-    }
-    
-    res.json(feeRecord);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// Add payment (Admin)
-router.post('/:id/payment', protect, adminOnly, async (req, res) => {
-  try {
-    const { amount, paidDate, remarks } = req.body;
-    
-    const feeRecord = await Fee.findById(req.params.id);
-    
-    if (!feeRecord) {
-      return res.status(404).json({ message: 'Fee record not found' });
-    }
-    
-    // Add payment to history
-    feeRecord.payments.push({
-      amount,
-      paidDate: new Date(paidDate),
-      remarks,
-      addedBy: req.user._id
-    });
-    
-    // Sort payments by date to get the latest
-    feeRecord.payments.sort((a, b) => new Date(b.paidDate).getTime() - new Date(a.paidDate).getTime());
-    
-    // Auto-calculate next due date (30 days from LAST payment date)
-    const lastPayment = feeRecord.payments[0]; // Most recent payment
-    const lastPaidDate = new Date(lastPayment.paidDate);
-    const nextDue = new Date(lastPaidDate);
-    nextDue.setDate(nextDue.getDate() + 30);
-    feeRecord.nextDueDate = nextDue;
-    
-    await feeRecord.save();
-    
-    const updated = await Fee.findById(req.params.id)
-      .populate('studentId', 'name class')
-      .populate('payments.addedBy', 'name');
-    
-    res.json(updated);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// Update next due date (Admin)
-router.put('/:id/due-date', protect, adminOnly, async (req, res) => {
-  try {
-    const { nextDueDate } = req.body;
-    
-    const feeRecord = await Fee.findByIdAndUpdate(
-      req.params.id,
-      { nextDueDate: new Date(nextDueDate) },
+    const student = await Student.findByIdAndUpdate(
+      req.params.studentId,
+      { joiningDate, monthlyFee },
       { new: true }
-    ).populate('studentId', 'name class');
-    
-    res.json(feeRecord);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// Delete payment (Admin)
-router.delete('/:feeId/payment/:paymentId', protect, adminOnly, async (req, res) => {
-  try {
-    const feeRecord = await Fee.findById(req.params.feeId);
-    
-    if (!feeRecord) {
-      return res.status(404).json({ message: 'Fee record not found' });
-    }
-    
-    feeRecord.payments = feeRecord.payments.filter(
-      p => p._id.toString() !== req.params.paymentId
     );
     
-    await feeRecord.save();
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
     
-    res.json({ message: 'Payment deleted successfully' });
+    // Regenerate fee cycles
+    await ensureFeeCycles(req.params.studentId);
+    
+    res.json(student);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get overdue count (for dashboard)
+router.get('/overdue-count', protect, adminOnly, async (req, res) => {
+  try {
+    const count = await Fee.countDocuments({ status: 'overdue' });
+    res.json({ count });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
