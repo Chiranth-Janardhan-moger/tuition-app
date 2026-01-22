@@ -24,7 +24,7 @@ const feeSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'paid', 'overdue'],
+    enum: ['pending', 'paid', 'overdue', 'waived'],
     default: 'pending'
   },
   paidDate: {

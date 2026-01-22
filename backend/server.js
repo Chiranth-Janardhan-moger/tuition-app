@@ -24,30 +24,72 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Compression middleware (optional - only if installed)
 try {
   const compression = require('compression');
-  app.use(compression());
+  app.use(compression({
+    level: 6, // Compression level (0-9)
+    threshold: 1024, // Only compress responses larger than 1KB
+    filter: (req, res) => {
+      if (req.headers['x-no-compression']) {
+        return false;
+      }
+      return compression.filter(req, res);
+    }
+  }));
   console.log('✓ Compression enabled');
 } catch (err) {
   console.log('ℹ Compression not available, continuing without it');
 }
 
+// Request timeout middleware
+app.use((req, res, next) => {
+  req.setTimeout(30000); // 30 second timeout
+  res.setTimeout(30000);
+  next();
+});
+
+// Response time logging (development only)
+if (process.env.NODE_ENV === 'development') {
+  app.use((req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+      const duration = Date.now() - start;
+      if (duration > 1000) {
+        console.log(`⚠️ Slow request: ${req.method} ${req.path} - ${duration}ms`);
+      }
+    });
+    next();
+  });
+}
+
 // MongoDB Connection with optimizations
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/tuition-app', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  maxPoolSize: 10, // Connection pool size
-  minPoolSize: 2,
+  maxPoolSize: 20, // Increased connection pool
+  minPoolSize: 5,
   socketTimeoutMS: 45000,
-  serverSelectionTimeoutMS: 5000,
-  family: 4 // Use IPv4
+  serverSelectionTimeoutMS: 10000,
+  family: 4, // Use IPv4
+  retryWrites: true,
+  retryReads: true
 })
 .then(() => {
-  console.log('MongoDB Connected');
+  console.log('✓ MongoDB Connected');
   // Enable query logging in development
   if (process.env.NODE_ENV === 'development') {
     mongoose.set('debug', true);
   }
 })
-.catch(err => console.log('MongoDB Error:', err));
+.catch(err => {
+  console.error('❌ MongoDB Error:', err);
+  process.exit(1); // Exit if database connection fails
+});
+
+// Handle MongoDB connection errors after initial connection
+mongoose.connection.on('error', err => {
+  console.error('MongoDB connection error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.warn('MongoDB disconnected. Attempting to reconnect...');
+});
 
 // Socket.io for real-time chat
 io.on('connection', (socket) => {
@@ -109,5 +151,22 @@ app.use('/api/leave', require('./routes/leave'));
 app.use('/api/query', require('./routes/query'));
 app.use('/api/announcements', require('./routes/announcements'));
 
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ message: 'Route not found' });
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  res.status(err.status || 500).json({
+    message: err.message || 'Internal server error',
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+  });
+});
+
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => {
+  console.log(`✓ Server running on port ${PORT}`);
+  console.log(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
+});

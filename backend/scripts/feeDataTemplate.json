@@ -1,0 +1,104 @@
+[
+  {
+    "studentName": "John Doe",
+    "joiningDate": "2024-08-08",
+    "monthlyFee": 5000,
+    "fees": [
+      {
+        "feeName": "August 2024 Fee",
+        "feeAmount": 5000,
+        "periodStart": "2024-08-08",
+        "periodEnd": "2024-09-07",
+        "status": "paid",
+        "paidDate": "2024-08-10",
+        "remarks": "Paid in cash"
+      },
+      {
+        "feeName": "September 2024 Fee",
+        "feeAmount": 5000,
+        "periodStart": "2024-09-08",
+        "periodEnd": "2024-10-07",
+        "status": "paid",
+        "paidDate": "2024-09-12",
+        "remarks": "Paid online"
+      },
+      {
+        "feeName": "October 2024 Fee",
+        "feeAmount": 5000,
+        "periodStart": "2024-10-08",
+        "periodEnd": "2024-11-07",
+        "status": "paid",
+        "paidDate": "2024-10-15"
+      },
+      {
+        "feeName": "November 2024 Fee",
+        "feeAmount": 5000,
+        "periodStart": "2024-11-08",
+        "periodEnd": "2024-12-07",
+        "status": "paid",
+        "paidDate": "2024-11-20"
+      },
+      {
+        "feeName": "December 2024 Fee",
+        "feeAmount": 5000,
+        "periodStart": "2024-12-08",
+        "periodEnd": "2025-01-07",
+        "status": "paid",
+        "paidDate": "2024-12-18"
+      },
+      {
+        "feeName": "January 2025 Fee",
+        "feeAmount": 5000,
+        "periodStart": "2025-01-08",
+        "periodEnd": "2025-02-07",
+        "status": "pending"
+      }
+    ]
+  },
+  {
+    "studentName": "Jane Smith",
+    "joiningDate": "2024-09-01",
+    "monthlyFee": 4500,
+    "fees": [
+      {
+        "feeName": "September 2024 Fee",
+        "feeAmount": 4500,
+        "periodStart": "2024-09-01",
+        "periodEnd": "2024-09-30",
+        "status": "paid",
+        "paidDate": "2024-09-05"
+      },
+      {
+        "feeName": "October 2024 Fee",
+        "feeAmount": 4500,
+        "periodStart": "2024-10-01",
+        "periodEnd": "2024-10-31",
+        "status": "paid",
+        "paidDate": "2024-10-08"
+      },
+      {
+        "feeName": "November 2024 Fee",
+        "feeAmount": 4500,
+        "periodStart": "2024-11-01",
+        "periodEnd": "2024-11-30",
+        "status": "paid",
+        "paidDate": "2024-11-10"
+      },
+      {
+        "feeName": "December 2024 Fee",
+        "feeAmount": 4500,
+        "periodStart": "2024-12-01",
+        "periodEnd": "2024-12-31",
+        "status": "paid",
+        "paidDate": "2024-12-12"
+      },
+      {
+        "feeName": "January 2025 Fee",
+        "feeAmount": 4500,
+        "periodStart": "2025-01-01",
+        "periodEnd": "2025-01-31",
+        "status": "overdue"
+      }
+    ]
+  }
+]

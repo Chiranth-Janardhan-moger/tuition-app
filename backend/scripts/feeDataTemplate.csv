@@ -1,0 +1,12 @@
+Student Name,Joining Date,Monthly Fee,Fee Name,Fee Amount,Period Start,Period End,Status,Paid Date,Remarks
+John Doe,2024-08-08,5000,August 2024 Fee,5000,2024-08-08,2024-09-07,paid,2024-08-10,Paid in cash
+John Doe,2024-08-08,5000,September 2024 Fee,5000,2024-09-08,2024-10-07,paid,2024-09-12,Paid online
+John Doe,2024-08-08,5000,October 2024 Fee,5000,2024-10-08,2024-11-07,paid,2024-10-15,
+John Doe,2024-08-08,5000,November 2024 Fee,5000,2024-11-08,2024-12-07,paid,2024-11-20,
+John Doe,2024-08-08,5000,December 2024 Fee,5000,2024-12-08,2025-01-07,paid,2024-12-18,
+John Doe,2024-08-08,5000,January 2025 Fee,5000,2025-01-08,2025-02-07,pending,,
+Jane Smith,2024-09-01,4500,September 2024 Fee,4500,2024-09-01,2024-09-30,paid,2024-09-05,
+Jane Smith,2024-09-01,4500,October 2024 Fee,4500,2024-10-01,2024-10-31,paid,2024-10-08,
+Jane Smith,2024-09-01,4500,November 2024 Fee,4500,2024-11-01,2024-11-30,paid,2024-11-10,
+Jane Smith,2024-09-01,4500,December 2024 Fee,4500,2024-12-01,2024-12-31,paid,2024-12-12,
+Jane Smith,2024-09-01,4500,January 2025 Fee,4500,2025-01-01,2025-01-31,overdue,,

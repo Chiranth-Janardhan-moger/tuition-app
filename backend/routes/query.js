@@ -16,23 +16,28 @@ router.get('/stats', protect, adminOnly, async (req, res) => {
   }
 });
 
-// Get queries by parent
+// Get queries by parent - Optimized
 router.get('/my-queries', protect, async (req, res) => {
   try {
     const queries = await Query.find({ parentId: req.user._id })
       .populate('studentId', 'name class')
       .populate('messages.senderId', 'name role')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .limit(50) // Limit to recent 50
+      .lean();
+    
+    res.set('Cache-Control', 'private, max-age=30');
     res.json(queries);
   } catch (error) {
+    console.error('Error fetching my queries:', error);
     res.status(500).json({ message: error.message });
   }
 });
 
-// Get all queries (Admin)
+// Get all queries (Admin) - Optimized
 router.get('/', protect, adminOnly, async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit) || 100; // Default limit 100
+    const limit = parseInt(req.query.limit) || 50; // Reduced default
     const skip = parseInt(req.query.skip) || 0;
     
     const queries = await Query.find()
@@ -42,10 +47,12 @@ router.get('/', protect, adminOnly, async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(limit)
       .skip(skip)
-      .lean(); // Use lean() for better performance
+      .lean();
     
+    res.set('Cache-Control', 'private, max-age=30');
     res.json(queries);
   } catch (error) {
+    console.error('Error fetching queries:', error);
     res.status(500).json({ message: error.message });
   }
 });
