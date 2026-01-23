@@ -113,7 +113,7 @@ app.get('/', (req, res) => {
   res.json({
     status: 'success',
     message: '🎓 EduManage API Server is running!',
-    version: '1.0.11',
+    version: '1.1.15',
     timestamp: new Date().toISOString(),
     endpoints: {
       auth: '/api/auth',

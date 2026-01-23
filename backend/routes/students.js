@@ -14,19 +14,46 @@ router.get('/count', protect, adminOnly, async (req, res) => {
   }
 });
 
-// Get all students (Admin) - Optimized with caching
+// Get all students (Admin) - Optimized with pagination
 router.get('/', protect, adminOnly, async (req, res) => {
   try {
-    const students = await Student.find()
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const skip = (page - 1) * limit;
+    const search = req.query.search || '';
+
+    // Build search query
+    const searchQuery = search
+      ? {
+          $or: [
+            { name: { $regex: search, $options: 'i' } },
+            { rollNumber: { $regex: search, $options: 'i' } }
+          ]
+        }
+      : {};
+
+    // Get total count for pagination
+    const total = await Student.countDocuments(searchQuery);
+
+    const students = await Student.find(searchQuery)
       .populate('parentId', 'name phoneNumber')
       .lean()
       .select('name class schoolName parentId rollNumber dateOfBirth joiningDate monthlyFee')
       .sort({ name: 1 })
-      .hint({ name: 1 }); // Use index
+      .skip(skip)
+      .limit(limit)
+      .hint({ name: 1 });
     
-    // Set cache headers
-    res.set('Cache-Control', 'private, max-age=60'); // Cache for 1 minute
-    res.json(students);
+    res.set('Cache-Control', 'private, max-age=60');
+    res.json({
+      students,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
   } catch (error) {
     console.error('Error fetching students:', error);
     res.status(500).json({ message: error.message });

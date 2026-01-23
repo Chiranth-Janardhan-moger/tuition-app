@@ -128,15 +128,39 @@ router.get('/student/:studentId', protect, async (req, res) => {
   }
 });
 
-// Get all students with fee summary (Admin) - OPTIMIZED
+// Get all students with fee summary (Admin) - OPTIMIZED with pagination
 router.get('/all-students', protect, adminOnly, async (req, res) => {
   try {
-    const students = await Student.find()
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 30;
+    const skip = (page - 1) * limit;
+    const search = req.query.search || '';
+
+    // Build search query
+    const searchQuery = search
+      ? {
+          $or: [
+            { name: { $regex: search, $options: 'i' } },
+            { rollNumber: { $regex: search, $options: 'i' } }
+          ]
+        }
+      : {};
+
+    // Get total count
+    const total = await Student.countDocuments(searchQuery);
+
+    const students = await Student.find(searchQuery)
       .populate('parentId', 'name phoneNumber')
       .select('name class rollNumber parentId joiningDate monthlyFee')
+      .sort({ name: 1 })
+      .skip(skip)
+      .limit(limit)
       .lean();
     
-    // Ensure cycles for all students in parallel (limited concurrency)
+    // Get student IDs for this page only
+    const studentIds = students.map(s => s._id);
+    
+    // Ensure cycles for current page students only (limited concurrency)
     const batchSize = 5;
     for (let i = 0; i < students.length; i += batchSize) {
       const batch = students.slice(i, i + batchSize);
@@ -149,11 +173,11 @@ router.get('/all-students', protect, adminOnly, async (req, res) => {
       );
     }
     
-    // Get all fee counts in one aggregation
+    // Get fee counts only for current page students
     const feeCounts = await Fee.aggregate([
       {
         $match: {
-          studentId: { $in: students.map(s => s._id) }
+          studentId: { $in: studentIds }
         }
       },
       {
@@ -169,11 +193,11 @@ router.get('/all-students', protect, adminOnly, async (req, res) => {
       }
     ]);
     
-    // Get next unpaid fees
+    // Get next unpaid fees for current page students
     const nextUnpaidFees = await Fee.aggregate([
       {
         $match: {
-          studentId: { $in: students.map(s => s._id) },
+          studentId: { $in: studentIds },
           status: { $in: ['pending', 'overdue'] }
         }
       },
@@ -205,7 +229,15 @@ router.get('/all-students', protect, adminOnly, async (req, res) => {
       };
     });
     
-    res.json(studentsWithFees);
+    res.json({
+      students: studentsWithFees,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
   } catch (error) {
     console.error('Error loading students with fees:', error);
     res.status(500).json({ message: error.message });
