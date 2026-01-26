@@ -1,60 +1,73 @@
 [
   {
-    "studentName": "Yuvraj",
-    "joiningDate": "2025-06-27",
-    "monthlyFee": 1000,
+    "studentName": "Vamsi",
+    "joiningDate": "2025-06-17",
+    "monthlyFee": 800,
     "fees": [
       {
+        "feeName": "June 2025 Fee",
+        "feeAmount": 800,
+        "periodStart": "2025-06-01",
+        "periodEnd": "2025-06-30",
+        "status": "paid",
+        "paidDate": "2025-07-17",
+        "remarks": "Late payment"
+      },
+      {
         "feeName": "July 2025 Fee",
-        "feeAmount": 1000,
+        "feeAmount": 800,
         "periodStart": "2025-07-01",
         "periodEnd": "2025-07-31",
         "status": "paid",
-        "paidDate": "2025-08-02"
+        "paidDate": "2025-08-29",
+        "remarks": "Late payment"
       },
       {
         "feeName": "August 2025 Fee",
-        "feeAmount": 1000,
+        "feeAmount": 800,
         "periodStart": "2025-08-01",
         "periodEnd": "2025-08-31",
         "status": "paid",
-        "paidDate": "2025-09-05"
+        "paidDate": "2025-09-30",
+        "remarks": "Late payment"
       },
       {
         "feeName": "September 2025 Fee",
-        "feeAmount": 1000,
+        "feeAmount": 800,
         "periodStart": "2025-09-01",
         "periodEnd": "2025-09-30",
         "status": "paid",
-        "paidDate": "2025-10-07"
+        "paidDate": "2025-11-04",
+        "remarks": "Late payment"
       },
       {
         "feeName": "October 2025 Fee",
-        "feeAmount": 1000,
+        "feeAmount": 800,
         "periodStart": "2025-10-01",
         "periodEnd": "2025-10-31",
         "status": "paid",
-        "paidDate": "2025-11-04"
+        "paidDate": "2025-12-05",
+        "remarks": "Late payment"
       },
       {
         "feeName": "November 2025 Fee",
-        "feeAmount": 1000,
+        "feeAmount": 800,
         "periodStart": "2025-11-01",
         "periodEnd": "2025-11-30",
         "status": "paid",
-        "paidDate": "2025-12-05"
+        "paidDate": "2026-01-13",
+        "remarks": "Late payment"
       },
       {
         "feeName": "December 2025 Fee",
-        "feeAmount": 1000,
+        "feeAmount": 800,
         "periodStart": "2025-12-01",
         "periodEnd": "2025-12-31",
-        "status": "paid",
-        "paidDate": "2026-01-03"
+        "status": "overdue"
       },
       {
         "feeName": "January 2026 Fee",
-        "feeAmount": 1000,
+        "feeAmount": 800,
         "periodStart": "2026-01-01",
         "periodEnd": "2026-01-31",
         "status": "pending"
@@ -62,61 +75,75 @@
     ]
   },
   {
-    "studentName": "Sunitha",
-    "joiningDate": "2025-06-27",
-    "monthlyFee": 1000,
+    "studentName": "Rithvik",
+    "joiningDate": "2025-06-16",
+    "monthlyFee": 800,
     "fees": [
       {
+        "feeName": "June 2025 Fee",
+        "feeAmount": 800,
+        "periodStart": "2025-06-01",
+        "periodEnd": "2025-06-30",
+        "status": "paid",
+        "paidDate": "2025-09-16",
+        "remarks": "Late payment"
+      },
+      {
         "feeName": "July 2025 Fee",
-        "feeAmount": 1000,
+        "feeAmount": 800,
         "periodStart": "2025-07-01",
         "periodEnd": "2025-07-31",
         "status": "paid",
-        "paidDate": "2025-08-02"
+        "paidDate": "2025-09-16",
+        "remarks": "Late payment"
       },
       {
         "feeName": "August 2025 Fee",
-        "feeAmount": 1000,
+        "feeAmount": 800,
         "periodStart": "2025-08-01",
         "periodEnd": "2025-08-31",
         "status": "paid",
-        "paidDate": "2025-09-05"
+        "paidDate": "2025-09-16",
+        "remarks": "Late payment"
       },
       {
         "feeName": "September 2025 Fee",
-        "feeAmount": 1000,
+        "feeAmount": 800,
         "periodStart": "2025-09-01",
         "periodEnd": "2025-09-30",
         "status": "paid",
-        "paidDate": "2025-10-07"
+        "paidDate": "2025-12-17",
+        "remarks": "Late payment"
       },
       {
         "feeName": "October 2025 Fee",
-        "feeAmount": 1000,
+        "feeAmount": 800,
         "periodStart": "2025-10-01",
         "periodEnd": "2025-10-31",
         "status": "paid",
-        "paidDate": "2025-11-04"
+        "paidDate": "2025-12-17",
+        "remarks": "Late payment"
       },
       {
         "feeName": "November 2025 Fee",
-        "feeAmount": 1000,
+        "feeAmount": 800,
         "periodStart": "2025-11-01",
         "periodEnd": "2025-11-30",
         "status": "paid",
-        "paidDate": "2025-12-05"
+        "paidDate": "2026-01-12",
+        "remarks": "Late payment"
       },
       {
         "feeName": "December 2025 Fee",
-        "feeAmount": 1000,
+        "feeAmount": 800,
         "periodStart": "2025-12-01",
         "periodEnd": "2025-12-31",
         "status": "paid",
-        "paidDate": "2026-01-03"
+        "paidDate": "2026-01-12"
       },
       {
         "feeName": "January 2026 Fee",
-        "feeAmount": 1000,
+        "feeAmount": 800,
         "periodStart": "2026-01-01",
         "periodEnd": "2026-01-31",
         "status": "pending"

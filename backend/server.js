@@ -150,6 +150,7 @@ app.use('/api/chat', require('./routes/chat'));
 app.use('/api/leave', require('./routes/leave'));
 app.use('/api/query', require('./routes/query'));
 app.use('/api/announcements', require('./routes/announcements'));
+app.use('/api/crash-logs', require('./routes/crashLogs'));
 
 // 404 handler
 app.use((req, res) => {
