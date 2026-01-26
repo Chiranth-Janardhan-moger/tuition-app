@@ -32,3 +32,10 @@ exports.adminOnly = (req, res, next) => {
   }
   next();
 };
+
+exports.developerOnly = (req, res, next) => {
+  if (req.user.role !== 'developer') {
+    return res.status(403).json({ message: 'Developer access required' });
+  }
+  next();
+};

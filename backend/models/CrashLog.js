@@ -24,7 +24,7 @@ const crashLogSchema = new mongoose.Schema({
   },
   userInfo: {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    userRole: { type: String, enum: ['admin', 'parent'] },
+    userRole: { type: String, enum: ['admin', 'parent', 'developer'] },
     isFirstLaunch: { type: Boolean, default: false }
   },
   appState: {

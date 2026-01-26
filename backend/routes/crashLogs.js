@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const CrashLog = require('../models/CrashLog');
 const DeviceAnalytics = require('../models/DeviceAnalytics');
-const { protect, adminOnly } = require('../middleware/auth');
+const { protect, developerOnly } = require('../middleware/auth');
 
 // Report a crash (from mobile app)
 router.post('/report', async (req, res) => {
@@ -81,8 +81,8 @@ router.post('/analytics', async (req, res) => {
   }
 });
 
-// Get crash logs (Admin only)
-router.get('/crashes', protect, adminOnly, async (req, res) => {
+// Get crash logs (Developer only)
+router.get('/crashes', protect, developerOnly, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
@@ -137,8 +137,8 @@ router.get('/crashes', protect, adminOnly, async (req, res) => {
   }
 });
 
-// Get device analytics (Admin only)
-router.get('/devices', protect, adminOnly, async (req, res) => {
+// Get device analytics (Developer only)
+router.get('/devices', protect, developerOnly, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
@@ -217,8 +217,8 @@ router.get('/devices', protect, adminOnly, async (req, res) => {
   }
 });
 
-// Mark crash as resolved (Admin only)
-router.patch('/crashes/:id/resolve', protect, adminOnly, async (req, res) => {
+// Mark crash as resolved (Developer only)
+router.patch('/crashes/:id/resolve', protect, developerOnly, async (req, res) => {
   try {
     const { notes } = req.body;
     
@@ -244,8 +244,8 @@ router.patch('/crashes/:id/resolve', protect, adminOnly, async (req, res) => {
   }
 });
 
-// Get crash details (Admin only)
-router.get('/crashes/:id', protect, adminOnly, async (req, res) => {
+// Get crash details (Developer only)
+router.get('/crashes/:id', protect, developerOnly, async (req, res) => {
   try {
     const crash = await CrashLog.findById(req.params.id)
       .populate('userInfo.userId', 'name phoneNumber')
