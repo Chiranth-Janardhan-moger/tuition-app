@@ -37,17 +37,42 @@ router.post('/analytics', async (req, res) => {
   try {
     const analyticsData = req.body;
     
-    await DeviceAnalytics.findOneAndUpdate(
-      { 'deviceInfo.uniqueId': analyticsData.deviceInfo.uniqueId },
-      {
-        $set: {
-          ...analyticsData,
-          'usage.lastSeen': new Date()
+    // Check if device exists
+    const existingDevice = await DeviceAnalytics.findOne({
+      'deviceInfo.uniqueId': analyticsData.deviceInfo.uniqueId
+    });
+    
+    if (existingDevice) {
+      // Update existing device
+      await DeviceAnalytics.findOneAndUpdate(
+        { 'deviceInfo.uniqueId': analyticsData.deviceInfo.uniqueId },
+        {
+          $set: {
+            deviceInfo: analyticsData.deviceInfo,
+            appInfo: analyticsData.appInfo,
+            location: analyticsData.location,
+            'usage.lastSeen': new Date()
+          },
+          $inc: { 'usage.totalSessions': 1 }
         },
-        $inc: { 'usage.totalSessions': 1 }
-      },
-      { upsert: true, new: true }
-    );
+        { new: true }
+      );
+    } else {
+      // Create new device record
+      const newDevice = new DeviceAnalytics({
+        deviceInfo: analyticsData.deviceInfo,
+        appInfo: analyticsData.appInfo,
+        location: analyticsData.location,
+        usage: {
+          firstLaunch: analyticsData.usage?.firstLaunch || new Date(),
+          lastSeen: new Date(),
+          totalSessions: 1,
+          totalCrashes: 0
+        },
+        isActive: true
+      });
+      await newDevice.save();
+    }
     
     res.status(200).json({ message: 'Analytics updated successfully' });
   } catch (error) {
