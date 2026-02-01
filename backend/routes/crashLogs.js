@@ -262,4 +262,27 @@ router.get('/crashes/:id', protect, developerOnly, async (req, res) => {
   }
 });
 
+// Delete crash log (Developer only - only resolved crashes)
+router.delete('/crashes/:id', protect, developerOnly, async (req, res) => {
+  try {
+    const crash = await CrashLog.findById(req.params.id);
+    
+    if (!crash) {
+      return res.status(404).json({ message: 'Crash not found' });
+    }
+    
+    // Only allow deletion of resolved crashes
+    if (!crash.resolved) {
+      return res.status(400).json({ message: 'Can only delete resolved crashes' });
+    }
+    
+    await CrashLog.findByIdAndDelete(req.params.id);
+    
+    res.json({ message: 'Crash log deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting crash:', error);
+    res.status(500).json({ message: 'Failed to delete crash' });
+  }
+});
+
 module.exports = router;

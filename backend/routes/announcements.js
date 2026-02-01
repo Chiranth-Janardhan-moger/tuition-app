@@ -3,18 +3,16 @@ const router = express.Router();
 const Announcement = require('../models/Announcement');
 const { protect, adminOnly } = require('../middleware/auth');
 
-// Get all announcements (only today's)
+// Get all announcements (recent ones)
 router.get('/', protect, async (req, res) => {
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    // Show announcements from the last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const announcements = await Announcement.find({
       createdAt: {
-        $gte: today,
-        $lt: tomorrow
+        $gte: thirtyDaysAgo
       }
     })
       .populate('createdBy', 'name')
@@ -52,11 +50,12 @@ router.delete('/:id', protect, adminOnly, async (req, res) => {
 // Auto-delete old announcements (called periodically or on request)
 router.delete('/cleanup/old', protect, adminOnly, async (req, res) => {
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Delete announcements older than 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
     const result = await Announcement.deleteMany({
-      createdAt: { $lt: today }
+      createdAt: { $lt: thirtyDaysAgo }
     });
     
     res.json({ message: `Deleted ${result.deletedCount} old announcements` });

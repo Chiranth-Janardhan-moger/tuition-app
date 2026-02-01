@@ -170,4 +170,20 @@ router.put('/:id/reopen', protect, adminOnly, async (req, res) => {
   }
 });
 
+// Delete query (Admin)
+router.delete('/:id', protect, adminOnly, async (req, res) => {
+  try {
+    const query = await Query.findById(req.params.id);
+    
+    if (!query) {
+      return res.status(404).json({ message: 'Query not found' });
+    }
+    
+    await Query.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Query deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router;
