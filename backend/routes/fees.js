@@ -399,7 +399,14 @@ router.put('/student/:studentId/settings', protect, adminOnly, async (req, res) 
 // Get overdue count (for dashboard)
 router.get('/overdue-count', protect, adminOnly, async (req, res) => {
   try {
-    const count = await Fee.countDocuments({ status: 'overdue' });
+    // Count overdue fees that have valid student references
+    const overdueFees = await Fee.find({ status: 'overdue' })
+      .populate('studentId', '_id')
+      .lean();
+    
+    // Count only fees with valid student data
+    const count = overdueFees.filter(fee => fee.studentId).length;
+    
     res.json({ count });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -414,7 +421,10 @@ router.get('/overdue', protect, adminOnly, async (req, res) => {
       .sort({ periodStart: 1 })
       .lean();
     
-    res.json(overdueFees);
+    // Filter out fees where student data is missing
+    const validFees = overdueFees.filter(fee => fee.studentId && fee.studentId.name);
+    
+    res.json(validFees);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
