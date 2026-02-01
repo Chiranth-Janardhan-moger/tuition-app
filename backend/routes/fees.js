@@ -406,6 +406,20 @@ router.get('/overdue-count', protect, adminOnly, async (req, res) => {
   }
 });
 
+// Get detailed overdue fees list (for overdue fees screen)
+router.get('/overdue', protect, adminOnly, async (req, res) => {
+  try {
+    const overdueFees = await Fee.find({ status: 'overdue' })
+      .populate('studentId', 'name class')
+      .sort({ periodStart: 1 })
+      .lean();
+    
+    res.json(overdueFees);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Clean up duplicate fee cycles (Admin utility)
 router.post('/cleanup-duplicates', protect, adminOnly, async (req, res) => {
   try {
