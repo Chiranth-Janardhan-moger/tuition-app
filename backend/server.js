@@ -152,6 +152,8 @@ app.use('/api/query', require('./routes/query'));
 app.use('/api/announcements', require('./routes/announcements'));
 app.use('/api/crash-logs', require('./routes/crashLogs'));
 app.use('/api/maintenance', require('./routes/maintenance'));
+app.use('/api/license', require('./routes/license'));
+app.use('/api/system-settings', require('./routes/systemSettings'));
 
 // 404 handler
 app.use((req, res) => {
