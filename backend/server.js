@@ -151,6 +151,7 @@ app.use('/api/leave', require('./routes/leave'));
 app.use('/api/query', require('./routes/query'));
 app.use('/api/announcements', require('./routes/announcements'));
 app.use('/api/crash-logs', require('./routes/crashLogs'));
+app.use('/api/maintenance', require('./routes/maintenance'));
 
 // 404 handler
 app.use((req, res) => {

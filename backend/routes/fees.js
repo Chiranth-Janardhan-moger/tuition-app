@@ -4,7 +4,7 @@ const Fee = require('../models/Fee');
 const Student = require('../models/Student');
 const { protect, adminOnly } = require('../middleware/auth');
 
-// Helper function to generate fee cycles
+// Helper function to generate fee cycles based on joining date
 const generateFeeCycles = (joiningDate, monthlyFee, monthsAhead = 12) => {
   const cycles = [];
   const today = new Date();
@@ -13,29 +13,28 @@ const generateFeeCycles = (joiningDate, monthlyFee, monthsAhead = 12) => {
   const startDate = new Date(joiningDate);
   startDate.setHours(0, 0, 0, 0);
   
-  // Start from the 1st of the joining month
-  const joiningMonth = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
-  joiningMonth.setHours(0, 0, 0, 0);
+  // Get the day of month from joining date (e.g., 23 for July 23)
+  const cycleDay = startDate.getDate();
   
   const futureLimit = new Date(today);
   futureLimit.setMonth(futureLimit.getMonth() + monthsAhead);
   
-  // Generate cycles month by month starting from joining month
+  // Generate cycles starting from joining date
   let monthOffset = 0;
   
   while (monthOffset < 100) {
-    // Calculate period start (1st of each month)
-    const periodStart = new Date(joiningMonth.getFullYear(), joiningMonth.getMonth() + monthOffset, 1);
+    // Calculate period start (same day as joining date in each month)
+    const periodStart = new Date(startDate.getFullYear(), startDate.getMonth() + monthOffset, cycleDay);
     periodStart.setHours(0, 0, 0, 0);
     
     // Stop if we've gone too far into the future
     if (periodStart > futureLimit) break;
     
-    // Calculate period end (last day of the same month)
-    const periodEnd = new Date(periodStart.getFullYear(), periodStart.getMonth() + 1, 0);
+    // Calculate period end (day before the same day next month)
+    const periodEnd = new Date(startDate.getFullYear(), startDate.getMonth() + monthOffset + 1, cycleDay - 1);
     periodEnd.setHours(23, 59, 59, 999);
     
-    // Get month name for fee name
+    // Get month name for fee name (use the start month)
     const monthName = periodStart.toLocaleString('en-US', { month: 'long' });
     const year = periodStart.getFullYear();
     const feeName = `${monthName} ${year} Fee`;
@@ -87,17 +86,20 @@ const ensureFeeCycles = async (studentId) => {
       return;
     }
     
+    // Get the cycle day from joining date
+    const joiningDate = new Date(student.joiningDate);
+    const cycleDay = joiningDate.getDate();
+    
     // Find the last existing fee month
     let startMonth;
     if (existingFees.length > 0) {
       const lastFee = existingFees[existingFees.length - 1];
       const lastDate = new Date(lastFee.periodStart);
       // Start from the month after the last fee
-      startMonth = new Date(lastDate.getFullYear(), lastDate.getMonth() + 1, 1);
+      startMonth = new Date(lastDate.getFullYear(), lastDate.getMonth() + 1, cycleDay);
     } else {
-      // No existing fees, start from joining month
-      const joiningDate = new Date(student.joiningDate);
-      startMonth = new Date(joiningDate.getFullYear(), joiningDate.getMonth(), 1);
+      // No existing fees, start from joining date
+      startMonth = new Date(joiningDate);
     }
     startMonth.setHours(0, 0, 0, 0);
     
@@ -106,10 +108,10 @@ const ensureFeeCycles = async (studentId) => {
     const newCycles = [];
     
     for (let i = 0; i < cyclesToCreate; i++) {
-      const periodStart = new Date(startMonth.getFullYear(), startMonth.getMonth() + i, 1);
+      const periodStart = new Date(startMonth.getFullYear(), startMonth.getMonth() + i, cycleDay);
       periodStart.setHours(0, 0, 0, 0);
       
-      const periodEnd = new Date(periodStart.getFullYear(), periodStart.getMonth() + 1, 0);
+      const periodEnd = new Date(startMonth.getFullYear(), startMonth.getMonth() + i + 1, cycleDay - 1);
       periodEnd.setHours(23, 59, 59, 999);
       
       const monthName = periodStart.toLocaleString('en-US', { month: 'long' });
@@ -510,16 +512,20 @@ router.post('/regenerate-cycles', protect, adminOnly, async (req, res) => {
       // Get all existing fees
       const existingFees = await Fee.find({ studentId: student._id }).lean();
       
+      // Get the cycle day from joining date
+      const joiningDate = new Date(student.joiningDate);
+      const cycleDay = joiningDate.getDate();
+      
       // Fix paid/waived fees with wrong dates
       const paidFees = existingFees.filter(f => f.status === 'paid' || f.status === 'waived');
       
       for (const paidFee of paidFees) {
         const periodStart = new Date(paidFee.periodStart);
-        const correctStart = new Date(periodStart.getFullYear(), periodStart.getMonth(), 1);
-        const correctEnd = new Date(periodStart.getFullYear(), periodStart.getMonth() + 1, 0, 23, 59, 59, 999);
+        const correctStart = new Date(periodStart.getFullYear(), periodStart.getMonth(), cycleDay);
+        const correctEnd = new Date(periodStart.getFullYear(), periodStart.getMonth() + 1, cycleDay - 1, 23, 59, 59, 999);
         
         // Check if dates need fixing
-        if (periodStart.getDate() !== 1 || 
+        if (periodStart.getDate() !== cycleDay || 
             new Date(paidFee.periodEnd).getDate() !== correctEnd.getDate()) {
           
           await Fee.findByIdAndUpdate(paidFee._id, {

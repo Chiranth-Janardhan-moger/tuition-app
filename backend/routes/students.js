@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Student = require('../models/Student');
 const User = require('../models/User');
+const Fee = require('../models/Fee');
 const { protect, adminOnly } = require('../middleware/auth');
 
 // Get student count (Admin) - Optimized for dashboard
@@ -160,9 +161,59 @@ router.put('/:id/unlink', protect, adminOnly, async (req, res) => {
 // Update student (Admin)
 router.put('/:id', protect, adminOnly, async (req, res) => {
   try {
+    // Get the old student data to check if joining date or monthly fee changed
+    const oldStudent = await Student.findById(req.params.id).lean();
+    
+    if (!oldStudent) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+    
+    // Update the student
     const student = await Student.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    
+    // Check if joining date or monthly fee changed
+    const joiningDateChanged = req.body.joiningDate && 
+      new Date(oldStudent.joiningDate).getTime() !== new Date(req.body.joiningDate).getTime();
+    const monthlyFeeChanged = req.body.monthlyFee && 
+      oldStudent.monthlyFee !== req.body.monthlyFee;
+    
+    // If joining date or monthly fee changed, regenerate fee cycles
+    if (joiningDateChanged || monthlyFeeChanged) {
+      console.log(`Regenerating fee cycles for student ${student._id} due to ${joiningDateChanged ? 'joining date' : 'monthly fee'} change`);
+      
+      // Delete all pending/overdue fees (keep paid/waived)
+      await Fee.deleteMany({
+        studentId: student._id,
+        status: { $in: ['pending', 'overdue'] }
+      });
+      
+      // If joining date changed, also update paid/waived fees to use correct dates
+      if (joiningDateChanged && student.joiningDate) {
+        const cycleDay = new Date(student.joiningDate).getDate();
+        const paidFees = await Fee.find({
+          studentId: student._id,
+          status: { $in: ['paid', 'waived'] }
+        });
+        
+        for (const fee of paidFees) {
+          const periodStart = new Date(fee.periodStart);
+          const correctStart = new Date(periodStart.getFullYear(), periodStart.getMonth(), cycleDay);
+          const correctEnd = new Date(periodStart.getFullYear(), periodStart.getMonth() + 1, cycleDay - 1, 23, 59, 59, 999);
+          
+          await Fee.findByIdAndUpdate(fee._id, {
+            periodStart: correctStart,
+            periodEnd: correctEnd
+          });
+        }
+      }
+      
+      // Generate new fee cycles (the ensureFeeCycles function will be called on next fee fetch)
+      console.log(`Fee cycles regenerated for student ${student._id}`);
+    }
+    
     res.json(student);
   } catch (error) {
+    console.error('Error updating student:', error);
     res.status(500).json({ message: error.message });
   }
 });
