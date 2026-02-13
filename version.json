@@ -1,9 +1,10 @@
 {
-  "version": "1.1.23",
+  "version": "1.1.24",
   "apkUrl": "https://github.com/Chiranth-Janardhan-moger/tuition-app/releases/download/v1.1.23/app-release.apk",
   "changelog": "Performance improvements\n- Faster loading times\n- Optimized database queries\n- Real-time attendance updates\n- Improved UI responsiveness\n- Fixed slow loading issues",
   "forceUpdate": false
 }
+
 
 
 
